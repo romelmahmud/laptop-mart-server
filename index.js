@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -39,6 +40,7 @@ function verifyJWT(req, res, next) {
 // Collections
 const categoriesCollection = client.db("laptopMart").collection("categories");
 const usersCollection = client.db("laptopMart").collection("users");
+const productsCollection = client.db("laptopMart").collection("products");
 
 async function run() {
   try {
@@ -79,6 +81,14 @@ async function run() {
       // creating new user
       const result = await usersCollection.insertOne(user);
       res.send(result);
+    });
+
+    // Save products on DB
+
+    app.post("/products", async (req, res) => {
+      const productsInfo = req.body;
+      const result = await productsCollection.insertOne(productsInfo);
+      res.status(200).send(result);
     });
 
     console.log("Database Connected...");
