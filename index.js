@@ -18,39 +18,30 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// verify
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send("unauthorized access");
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
+// Collections
+const categoriesCollection = client.db("laptopMart").collection("categories");
+const usersCollection = client.db("laptopMart").collection("users");
+
 async function run() {
   try {
-    const categoriesCollection = client
-      .db("laptopMart")
-      .collection("categories");
-    const usersCollection = client.db("laptopMart").collection("users");
-
-    // get all categories
-    app.get("/categories", async (req, res) => {
-      const query = {};
-      const result = await categoriesCollection.find(query).toArray();
-      res.send(result);
-    });
-
-    // save user
-    app.post("/users", async (req, res) => {
-      const user = req.body;
-      console.log(user.email);
-
-      // find existing user
-      const userQuery = {
-        email: user.email,
-      };
-      const existingUser = await usersCollection.findOne(userQuery);
-      if (existingUser) {
-        res.send("User already exist");
-        return;
-      }
-      // creating new user
-      const result = await usersCollection.insertOne(user);
-      res.send(result);
-    });
-
     // create json web token
 
     app.get("/jwt", async (req, res) => {
@@ -64,6 +55,30 @@ async function run() {
         return res.send({ accessToken: token });
       }
       res.status(403).send({ accessToken: "" });
+    });
+
+    // get all categories
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const result = await categoriesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // save user on Database
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      console.log(user.email);
+
+      // find existing user
+      const userQuery = { email: user.email };
+      const existingUser = await usersCollection.findOne(userQuery);
+      if (existingUser) {
+        res.send("User already exist");
+        return;
+      }
+      // creating new user
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
     });
 
     console.log("Database Connected...");
