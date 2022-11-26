@@ -78,6 +78,12 @@ async function run() {
         res.send("User already exist");
         return;
       }
+      // check if user is seller
+
+      if ((user.role = "seller")) {
+        user.varified = false;
+      }
+
       // creating new user
       const result = await usersCollection.insertOne(user);
       res.send(result);
