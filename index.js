@@ -19,7 +19,14 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-// verify
+// Collections
+const categoriesCollection = client.db("laptopMart").collection("categories");
+const usersCollection = client.db("laptopMart").collection("users");
+const productsCollection = client.db("laptopMart").collection("products");
+
+// middleware
+
+// verify JWT
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -36,11 +43,17 @@ function verifyJWT(req, res, next) {
     next();
   });
 }
+// verifySeller
+const verifySeller = async (req, res, next) => {
+  const decodedEmail = req.decoded.email;
+  const query = { email: decodedEmail };
+  const user = await usersCollection.findOne(query);
 
-// Collections
-const categoriesCollection = client.db("laptopMart").collection("categories");
-const usersCollection = client.db("laptopMart").collection("users");
-const productsCollection = client.db("laptopMart").collection("products");
+  if (user?.role !== "seller") {
+    return res.status(403).send({ message: "forbidden access" });
+  }
+  next();
+};
 
 async function run() {
   try {
@@ -91,7 +104,7 @@ async function run() {
 
     // Save products on DB
 
-    app.post("/products", async (req, res) => {
+    app.post("/products", verifyJWT, verifySeller, async (req, res) => {
       const productsInfo = req.body;
       productsInfo.advertise = false;
       productsInfo.reported = false;
@@ -114,6 +127,7 @@ async function run() {
       try {
         const email = req.params.email;
         console.log(email);
+
         const query = { sellerEmail: email };
         const result = await productsCollection.find(query).toArray();
         res.status(200).send(result);
