@@ -101,11 +101,25 @@ async function run() {
 
     // get all products by categories
 
-    app.get("/products/:categoryName", async (req, res) => {
+    app.get("/category/products/:categoryName", async (req, res) => {
       const categoryName = req.params.categoryName;
       const query = { category: categoryName };
       const result = await productsCollection.find(query).toArray();
       res.send(result);
+    });
+
+    // get all products by Seller
+
+    app.get("/seller/products/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        console.log(email);
+        const query = { sellerEmail: email };
+        const result = await productsCollection.find(query).toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        res.status(400).send(error.message);
+      }
     });
 
     // check is Admin
