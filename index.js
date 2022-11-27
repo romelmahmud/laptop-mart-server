@@ -82,8 +82,7 @@ async function run() {
     // save user on Database
     app.post("/users", async (req, res) => {
       const user = req.body;
-      console.log(user.email);
-
+      console.log(user);
       // find existing user
       const userQuery = { email: user.email };
       const existingUser = await usersCollection.findOne(userQuery);
@@ -91,11 +90,8 @@ async function run() {
         res.send("User already exist");
         return;
       }
-      // check if user is seller
 
-      if ((user.role = "seller")) {
-        user.varified = false;
-      }
+      user.varified = false;
 
       // creating new user
       const result = await usersCollection.insertOne(user);
@@ -103,7 +99,6 @@ async function run() {
     });
 
     // Save products on DB
-
     app.post("/products", verifyJWT, verifySeller, async (req, res) => {
       const productsInfo = req.body;
       productsInfo.advertise = false;
@@ -113,8 +108,7 @@ async function run() {
     });
 
     // get all products by categories
-
-    app.get("/category/products/:categoryName", async (req, res) => {
+    app.get("/category/products/:categoryName", verifyJWT, async (req, res) => {
       const categoryName = req.params.categoryName;
       const query = { category: categoryName };
       const result = await productsCollection.find(query).toArray();
@@ -122,19 +116,23 @@ async function run() {
     });
 
     // get all products by Seller
+    app.get(
+      "/seller/products/:email",
+      verifyJWT,
+      verifySeller,
+      async (req, res) => {
+        try {
+          const email = req.params.email;
+          console.log(email);
 
-    app.get("/seller/products/:email", async (req, res) => {
-      try {
-        const email = req.params.email;
-        console.log(email);
-
-        const query = { sellerEmail: email };
-        const result = await productsCollection.find(query).toArray();
-        res.status(200).send(result);
-      } catch (error) {
-        res.status(400).send(error.message);
+          const query = { sellerEmail: email };
+          const result = await productsCollection.find(query).toArray();
+          res.status(200).send(result);
+        } catch (error) {
+          res.status(400).send(error.message);
+        }
       }
-    });
+    );
 
     // check is Admin
     app.get("/users/admin/:email", async (req, res) => {
@@ -143,6 +141,7 @@ async function run() {
       const user = await usersCollection.findOne(query);
       res.send({ isAdmin: user?.role === "admin" });
     });
+
     // check is Sellers
     app.get("/users/seller/:email", async (req, res) => {
       const email = req.params.email;
@@ -150,6 +149,7 @@ async function run() {
       const user = await usersCollection.findOne(query);
       res.send({ isSeller: user?.role === "seller" });
     });
+
     // check is Buyer
     app.get("/users/buyer/:email", async (req, res) => {
       const email = req.params.email;
