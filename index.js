@@ -78,6 +78,13 @@ async function run() {
       const result = await categoriesCollection.find(query).toArray();
       res.send(result);
     });
+    // get category id by category name
+    app.get("/categories/:categoryName", async (req, res) => {
+      const categoryName = req.params.categoryName;
+      const query = { name: categoryName };
+      const result = await categoriesCollection.findOne(query);
+      res.send(result._id);
+    });
 
     // save user on Database
     app.post("/users", async (req, res) => {
@@ -108,9 +115,10 @@ async function run() {
     });
 
     // get all products by categories
-    app.get("/category/products/:categoryName", verifyJWT, async (req, res) => {
-      const categoryName = req.params.categoryName;
-      const query = { category: categoryName };
+    app.get("/category/products/:categoryId", verifyJWT, async (req, res) => {
+      const categoryId = req.params.categoryId;
+      console.log(categoryId);
+      const query = { categoryId: categoryId };
       const result = await productsCollection.find(query).toArray();
       res.send(result);
     });
