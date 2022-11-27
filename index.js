@@ -93,8 +93,19 @@ async function run() {
 
     app.post("/products", async (req, res) => {
       const productsInfo = req.body;
+      productsInfo.advertise = false;
+      productsInfo.reported = false;
       const result = await productsCollection.insertOne(productsInfo);
       res.status(200).send(result);
+    });
+
+    // get all products by categories
+
+    app.get("/products/:categoryName", async (req, res) => {
+      const categoryName = req.params.categoryName;
+      const query = { category: categoryName };
+      const result = await productsCollection.find(query).toArray();
+      res.send(result);
     });
 
     // check is Admin
