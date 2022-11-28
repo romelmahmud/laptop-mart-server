@@ -114,6 +114,13 @@ async function run() {
       res.status(200).send(result);
     });
 
+    // get all advertise product
+    app.get("/products/advertise/", async (req, res) => {
+      const query = { advertise: true };
+      const result = await productsCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // get all products by categories
     app.get("/category/products/:categoryId", verifyJWT, async (req, res) => {
       const categoryId = req.params.categoryId;
