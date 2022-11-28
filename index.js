@@ -129,16 +129,39 @@ async function run() {
       verifyJWT,
       verifySeller,
       async (req, res) => {
-        try {
-          const email = req.params.email;
-          console.log(email);
+        const email = req.params.email;
+        // console.log(email);
 
-          const query = { sellerEmail: email };
-          const result = await productsCollection.find(query).toArray();
-          res.status(200).send(result);
-        } catch (error) {
-          res.status(400).send(error.message);
-        }
+        const query = { sellerEmail: email };
+        const result = await productsCollection.find(query).toArray();
+        res.status(200).send(result);
+      }
+    );
+
+    // update product status (advertise to true)
+    app.get(
+      "/products/advertise/:productId",
+      verifyJWT,
+      verifySeller,
+      async (req, res) => {
+        const productId = req.params.productId;
+        console.log(productId);
+        const filter = {
+          _id: ObjectId(productId),
+        };
+        const updateDoc = {
+          $set: {
+            advertise: true,
+          },
+        };
+        const options = { upsert: true };
+
+        const result = await productsCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        res.status(200).send(result);
       }
     );
 
@@ -156,6 +179,14 @@ async function run() {
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isSeller: user?.role === "seller" });
+    });
+
+    // check if seller is varified
+    app.get("/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isVerified: user?.varified === true });
     });
 
     // check is Buyer
