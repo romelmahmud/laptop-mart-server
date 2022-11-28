@@ -172,6 +172,32 @@ async function run() {
         res.send(result);
       }
     );
+    // update seller verification
+    app.get(
+      "/users/sellers/:sellerId",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const sellerId = req.params.sellerId;
+
+        const filter = {
+          _id: ObjectId(sellerId),
+        };
+        const updateDoc = {
+          $set: {
+            varified: true,
+          },
+        };
+        const options = { upsert: true };
+
+        const result = await usersCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        res.status(200).send(result);
+      }
+    );
 
     // Save products on DB
     app.post("/products", verifyJWT, verifySeller, async (req, res) => {
