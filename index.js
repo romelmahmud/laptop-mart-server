@@ -152,7 +152,17 @@ async function run() {
       verifySeller,
       async (req, res) => {
         const productId = req.params.productId;
-        console.log(productId);
+        // console.log(productId);
+
+        // Check if product is sold
+
+        const query = { _id: ObjectId(productId) };
+        const product = await productsCollection.find(query).toArray();
+
+        if ((product.status = "sold")) {
+          return;
+        }
+
         const filter = {
           _id: ObjectId(productId),
         };
