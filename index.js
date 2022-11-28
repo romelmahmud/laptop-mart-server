@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 const categoriesCollection = client.db("laptopMart").collection("categories");
 const usersCollection = client.db("laptopMart").collection("users");
 const productsCollection = client.db("laptopMart").collection("products");
+const bookedCollection = client.db("laptopMart").collection("booked");
 
 // middleware
 
@@ -205,6 +206,20 @@ async function run() {
       productsInfo.advertise = false;
       productsInfo.reported = false;
       const result = await productsCollection.insertOne(productsInfo);
+      res.status(200).send(result);
+    });
+
+    // Save products on DB
+    app.post("/booked", verifyJWT, verifyBuyer, async (req, res) => {
+      const productsInfo = req.body;
+
+      const result = await bookedCollection.insertOne(productsInfo);
+      res.status(200).send(result);
+    });
+
+    app.get("/booked", verifyJWT, verifyBuyer, async (req, res) => {
+      const query = {};
+      const result = await bookedCollection.find(query).toArray();
       res.status(200).send(result);
     });
 
