@@ -55,6 +55,30 @@ const verifySeller = async (req, res, next) => {
   next();
 };
 
+// verifyAdmin
+const verifyAdmin = async (req, res, next) => {
+  const decodedEmail = req.decoded.email;
+  const query = { email: decodedEmail };
+  const user = await usersCollection.findOne(query);
+
+  if (user?.role !== "admin") {
+    return res.status(403).send({ message: "forbidden access" });
+  }
+  next();
+};
+
+// verifyBuyer
+const verifyBuyer = async (req, res, next) => {
+  const decodedEmail = req.decoded.email;
+  const query = { email: decodedEmail };
+  const user = await usersCollection.findOne(query);
+
+  if (user?.role !== "buyer") {
+    return res.status(403).send({ message: "forbidden access" });
+  }
+  next();
+};
+
 async function run() {
   try {
     // create json web token
@@ -105,6 +129,24 @@ async function run() {
       res.send(result);
     });
 
+    // get all Sellers
+    app.get("/users/sellers", verifyJWT, verifyAdmin, async (req, res) => {
+      const query = {
+        role: "seller",
+      };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get all buyers
+    app.get("/users/buyers", verifyJWT, verifyAdmin, async (req, res) => {
+      const query = {
+        role: "buyer",
+      };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Save products on DB
     app.post("/products", verifyJWT, verifySeller, async (req, res) => {
       const productsInfo = req.body;
@@ -141,6 +183,38 @@ async function run() {
 
         const query = { sellerEmail: email };
         const result = await productsCollection.find(query).toArray();
+        res.status(200).send(result);
+      }
+    );
+
+    // Delete product by Seller
+    app.delete(
+      "/seller/products/:productId",
+      verifyJWT,
+      verifySeller,
+      async (req, res) => {
+        const productId = req.params.productId;
+        // console.log(email);
+
+        const query = { _id: ObjectId(productId) };
+        const result = await productsCollection.findOneAndDelete(query);
+
+        res.status(200).send(result);
+      }
+    );
+
+    // Delete product by Admin
+    app.delete(
+      "/seller/products/:productId",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const productId = req.params.productId;
+        // console.log(email);
+
+        const query = { _id: ObjectId(productId) };
+        const result = await productsCollection.findOneAndDelete(query);
+
         res.status(200).send(result);
       }
     );
