@@ -147,6 +147,32 @@ async function run() {
       res.send(result);
     });
 
+    // delete seller by admin
+    app.delete(
+      "/users/sellers/:sellerId",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const sellerId = req.params.sellerId;
+        const query = { _id: ObjectId(sellerId) };
+        const result = await usersCollection.findOneAndDelete(query);
+        res.send(result);
+      }
+    );
+
+    // delete Buyer by admin
+    app.delete(
+      "/users/buyers/:buyerId",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const buyerId = req.params.buyerId;
+        const query = { _id: ObjectId(buyerId) };
+        const result = await usersCollection.findOneAndDelete(query);
+        res.send(result);
+      }
+    );
+
     // Save products on DB
     app.post("/products", verifyJWT, verifySeller, async (req, res) => {
       const productsInfo = req.body;
